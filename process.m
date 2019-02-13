@@ -1,6 +1,6 @@
 clc;clear all;close all;
 %% Read Image
-img = textread('human_corridor_1.txt');
+img = textread('human_corridor_0.txt');
 mask = img;
 mask(mask < 1.8 | mask > 4) = 0;
 mask(mask>0) = 255;
@@ -10,7 +10,7 @@ BW2 = bwareafilt(mask,3);
 imshow(BW2)
 %% After applying filter
 imgnew = img .*BW2;
-imshow(imgnew,[])
+imshow(img,[])
 
 %% Calculation of 3D Points
 % [dist, side] = 

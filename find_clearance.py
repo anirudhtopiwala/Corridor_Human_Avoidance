@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[2]:
+# In[21]:
 
 
 # Importing Libraries
@@ -17,7 +17,7 @@ class Find_Dist():
     # load_image() = This will take user input
     def load_image(self):
         dir =sys.argv[1]
-        #dir = './human_corridor_0.txt'
+#         dir = './human_corridor_0.txt'
         img = np.loadtxt(dir)
         return img
     
@@ -78,7 +78,7 @@ class Find_Dist():
         else:
             state = "right "
             pnew = iright[0]
-        dist = 1 + abs(img[py,pnew]*math.sin((70*math.pi*diffpixel)/(176*180)))
+        dist =  0.75 + abs(img[py,pnew]*math.sin((70*math.pi*diffpixel)/(176*180)))
         return dist,state
     
 

@@ -1,42 +1,45 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[49]:
+# In[2]:
 
 
-import os
+# Importing Libraries
 import numpy as np
-# import matplotlib.pyplot as plt
 import cv2
 import heapq
 import math
 import sys
 
-
-# In[50]:
-
-
 class Find_Dist():
-    # Finding clearance distance
+    # Class to find clearance distance
+    
+    # load_image() = This will take user input
     def load_image(self):
         dir =sys.argv[1]
+        #dir = './human_corridor_0.txt'
         img = np.loadtxt(dir)
-#         img = np.loadtxt('./human_corridor_1.txt')
-#         plt.imshow(img)
         return img
-#      Thresholfing image based on distance. Since human 
-#         is almost always 2 m away. Removing any pixel information
-#         less than 1.8 m and further away from 4m 
-    def threshold_image(self,img):
-        img[img<2] = 0 # make this in one line
+    
+    # get_centroid() = This will first threshold the image,
+    # by removing everything above 4 meteres and less than
+    # 2 m, as it is given that human is generally 2m away.
+    # The seconnd step is to locate the humana and get the 
+    # centroid. This is done by identifying the three largest 
+    # areas after cropping the image from bottom.
+    
+    def get_centroid(self,img):
+        # Thresholding
+        img[img<2] = 0 
         img[img>4] = 0
+        # Cropping the image
         img[-25:,:] = 0
-#         plt.imshow(img)
         mask = img.copy()
         mask[mask>0] = 255
         mask = mask.astype(np.uint8)
-#         plt.imshow(mask)
-        image, contours, hierarchy = cv2.findContours(mask, cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
+        # Finding the countour areas
+        image, contours, hierarchy = cv2.findContours(mask,
+                cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
         Area = []
         Cx = []
         Cy=[]
@@ -51,33 +54,38 @@ class Find_Dist():
                     Cy.append(cy)
                     area = cv2.contourArea(i)
                     Area.append(area)
+        # Finding the largest area
         px = heapq.nlargest(1, zip(Area, Cx,Cy))[0][1]
         py = heapq.nlargest(1, zip(Area, Cx,Cy))[0][2]
         return px,py     
-    # getting the obstacle distance based on Horizontal FOV of 70 degrees
-    def get_dist(self,px,py):
-#         side = "right" if px < 88 else "left"
+    
+    # get_dist() = Getting the Clearance Distance 
+    def get_dist(self,px,py,img):
+        mat = img[py,:]
+        ileft= []
+        iright = []
+        pnew =0
+        for i in range(25):
+            if (abs(mat[px+i+1]- mat[px+i])>0.5):
+                iright.append(px+i)
+
+            if (abs(mat[px-i]- mat[px-i-1])>0.5):
+                ileft.append(px-i)
         diffpixel = px - 88
-        dist = img[py,px]*math.sin((70*math.pi*diffpixel)/(176*180))
-        return dist
+        if diffpixel > 0:
+            state = "left "
+            pnew = ileft[0]
+        else:
+            state = "right "
+            pnew = iright[0]
+        dist = 1 + abs(img[py,pnew]*math.sin((70*math.pi*diffpixel)/(176*180)))
+        return dist,state
+    
+
 if __name__ == '__main__':
     c= Find_Dist()
     img = c.load_image()
-    px,py = c.threshold_image(img)
-    dist = c.get_dist(px,py)
-    state = []
-    if (dist> 0):
-        state = "left "
-        clearance = 0.75+ abs(dist)
-    else:
-        state = "right "
-        clearance = 0.75+abs(dist)
+    px,py = c.get_centroid(img)    
+    clearance, state = c.get_dist(px,py,img)
     print(state + str(clearance))
-    
-
-
-# In[ ]:
-
-
-
 
